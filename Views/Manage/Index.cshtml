@@ -1,0 +1,29 @@
+﻿@model Enterprise.Models.PersonalAreaModel
+@{
+	Layout = "~/Views/Shared/_Layout.cshtml";
+	var roleId = Model.UserInfo.Role;
+}
+
+<h2>@string.Format("Особистий кабінет {0}", roleId == "engineer" ?
+	"головного інженера" : "співробітника технологічного відділу")</h2>
+<p class="text-success">@ViewBag.StatusMessage</p>
+<div>
+    <h4>Особисті дані</h4>
+	<hr/>
+
+	@Html.Partial("PersonalInfoPartial", Model.UserInfo);
+
+	<dl class="dl-horizontal">
+        <dt>Пароль:</dt>
+        <dd>
+            @if (Model.CommonData.HasPassword)
+            {
+                @Html.ActionLink("Зміна паролю", actionName: "ChangePassword", controllerName: "Manage", htmlAttributes: null, routeValues: null)
+            }
+            else
+            {
+                @Html.ActionLink("Створити пароль", actionName: "SetPassword", controllerName: "Manage", htmlAttributes: null, routeValues: null)
+            }
+        </dd>
+    </dl>
+</div>
