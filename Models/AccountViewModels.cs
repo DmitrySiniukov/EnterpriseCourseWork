@@ -67,18 +67,18 @@ namespace Enterprise.Models
 		public bool RememberMe { get; set; }
 	}
 
-	public class UserViewModel
+	public class RegisterViewModel
 	{
-		[Required]
+		[Required(ErrorMessage = "Логін - обов'язкове поле")]
 		[Display(Name = "Логін")]
 		public string UserName { get; set; }
 
-		[Required]
+		[Required(ErrorMessage = "Електронна адреса - обов'язкове поле")]
 		[EmailAddress]
 		[Display(Name = "Електронна адреса")]
 		public string Email { get; set; }
 
-		[Required]
+		[Required(ErrorMessage = "Повне ім'я користувача - обов'язкове поле")]
 		[Display(Name = "Повне ім'я")]
 		[RegularExpression("^([a-zA-Zа-яА-ЯіІїЇ' ]){2,50}", ErrorMessage = "Строка імені містить недопустимі символи або її довжина не входить в діапазон від 2 до 50 символів.")]
 		public string FullName { get; set; }
@@ -90,12 +90,13 @@ namespace Enterprise.Models
 		[Display(Name = "Роль")]
 		public string Role { get; set; }
 
-		[Required]
+		[Required(ErrorMessage = "Пароль - обов'язкове поле")]
 		[StringLength(100, ErrorMessage = "{0} повинен містити хоча б {2} символів.", MinimumLength = 6)]
 		[DataType(DataType.Password)]
 		[Display(Name = "Пароль")]
 		public string Password { get; set; }
 
+		[Required(ErrorMessage = "Підтвердження пароля - обов'язкове поле")]
 		[DataType(DataType.Password)]
 		[Display(Name = "Підтвердження пароля")]
 		[Compare("Password", ErrorMessage = "Пароль і підтвердження не співпадають.")]
@@ -104,17 +105,18 @@ namespace Enterprise.Models
 
 	public class ResetPasswordViewModel
 	{
-		[Required]
+		[Required(ErrorMessage = "Електронна адреса - обов'язкове поле")]
 		[EmailAddress]
 		[Display(Name = "Електронна адреса")]
 		public string Email { get; set; }
 
-		[Required]
+		[Required(ErrorMessage = "Пароль - обов'язкове поле")]
 		[StringLength(100, ErrorMessage = "{0} повинен містити хоча б {2} символів.", MinimumLength = 6)]
 		[DataType(DataType.Password)]
 		[Display(Name = "Пароль")]
 		public string Password { get; set; }
 
+		[Required(ErrorMessage = "Підтвердження пароля - обов'язкове поле")]
 		[DataType(DataType.Password)]
 		[Display(Name = "Підтвердження пароля")]
 		[Compare("Password", ErrorMessage = "Пароль і підтвердження не співпадають.")]
@@ -125,7 +127,7 @@ namespace Enterprise.Models
 
 	public class ForgotPasswordViewModel
 	{
-		[Required]
+		[Required(ErrorMessage="Вкажіть електронну адресу")]
 		[EmailAddress]
 		[Display(Name = "Електронна адреса")]
 		public string Email { get; set; }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Text;
 using Enterprise.Models;
 using Microsoft.AspNet.Identity.EntityFramework;
@@ -55,30 +56,44 @@ namespace Enterprise.Infrastructure
 			return result;
 		}
 
-		public static List<Product> GetProducts()
+		public static List<Item> GetItems(Item instance)
 		{
-			var result = new List<Product>();
+			var result = new List<Item>();
+			var isMachine = instance is Machine;
 
 			using (var connection = new SqlConnection(DefaultConnection))
 			{
 				connection.Open();
 				using (var cmd = new SqlCommand())
 				{
-					cmd.CommandText = @"select p.Id, p.Name, p.Description, p.C_Date, p.C_User, u.UserName from Products p left join AspNetUsers u on p.C_User = u.Id";
+					cmd.CommandText = string.Format(
+						@"select p.Id, p.Name, p.Description, p.C_Date, p.C_User, u.UserName{0} from {1}s p
+							left join AspNetUsers u on p.C_User = u.Id{2}",
+						isMachine ? ", d.Id, d.Name" : string.Empty,
+						instance.InheritorName,
+						isMachine ? " left join Departments d on d.Id = p.DepartmentId" : string.Empty
+						);
+
 					cmd.Connection = connection;
 					using (var reader = cmd.ExecuteReader())
 					{
 						while (reader.Read())
 						{
-							result.Add(new Product
+							var item = instance.Create(
+								reader.GetFieldValue<int>(0),
+								reader.GetFieldValue<string>(1),
+								reader.GetFieldValue<string>(2),
+								reader.IsDBNull(3) ? DateTime.MinValue : reader.GetFieldValue<DateTime>(3),
+								reader.GetFieldValue<string>(4),
+								reader.GetFieldValue<string>(5)
+								);
+							if (isMachine)
 							{
-								Id = reader.GetFieldValue<int>(0),
-								Name = reader.GetFieldValue<string>(1),
-								Description = reader.GetFieldValue<string>(2),
-								CreationDate = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetFieldValue<DateTime>(3),
-								CreationUserId = reader.GetFieldValue<string>(4),
-								CreationUserLogin = reader.GetFieldValue<string>(5)
-							});
+								var machine = (Machine)item;
+								machine.DepartmentId = reader.IsDBNull(6) ? 0 : reader.GetFieldValue<int>(6);
+								machine.DepartmentName = reader.GetFieldValue<string>(7);
+							}
+							result.Add(item);
 						}
 					}
 				}
@@ -87,7 +102,7 @@ namespace Enterprise.Infrastructure
 			return result;
 		}
 
-		public static bool DeleteProduct(int id)
+		public static bool DeleteItem(int id, string inheritorName)
 		{
 			var result = false;
 			using (var connection = new SqlConnection(DefaultConnection))
@@ -95,7 +110,7 @@ namespace Enterprise.Infrastructure
 				connection.Open();
 				using (var cmd = new SqlCommand())
 				{
-					cmd.CommandText = @"delete Products where Id = @idParam";
+					cmd.CommandText = string.Format(@"delete {0}s where Id = @idParam", inheritorName);
 					cmd.Connection = connection;
 					cmd.Parameters.AddWithValue("idParam", id);
 					if (cmd.ExecuteNonQuery() > 0)
@@ -108,8 +123,16 @@ namespace Enterprise.Infrastructure
 			return result;
 		}
 
-		public static void UpdateProducts(IEnumerable<Product> products)
+		public static void UpdateItems(IEnumerable<Item> products)
 		{
+			var productsArray = (products as List<Item>) ?? products.ToList();
+			if (productsArray.Count == 0)
+			{
+				return;
+			}
+
+			var instance = productsArray[0];
+			var isMachine = instance is Machine;
 			var stringBuilder = new StringBuilder();
 
 			using (var connection = new SqlConnection(DefaultConnection))
@@ -117,22 +140,30 @@ namespace Enterprise.Infrastructure
 				connection.Open();
 				using (var cmd = new SqlCommand())
 				{
-					stringBuilder.AppendLine("BEGIN TRANSACTION UpdateProducts");
+					stringBuilder.AppendLine("BEGIN TRANSACTION UpdateItems");
 					var i = 0;
-					foreach (var p in products)
+					foreach (var p in productsArray)
 					{
 						++i;
 						var nameParam = string.Format("nameParam{0}", i);
 						var descriptionParam = string.Format("descriptionParam{0}", i);
 						var idParam = string.Format("idParam{0}", i);
-						stringBuilder.AppendLine(string.Format("update Products set Name = @{0}, Description = @{1} where Id = @{2}", nameParam, descriptionParam, idParam));
+						var departmentParam = string.Empty;
+						if (isMachine)
+						{
+							departmentParam = string.Format("departmentParam{0}", i);
+							cmd.Parameters.AddWithValue(departmentParam, ((Machine)p).DepartmentId);
+						}
+
+						stringBuilder.AppendLine(string.Format("update {0}s set Name = @{1}, Description = @{2}{3} where Id = @{4}", instance.InheritorName,
+							nameParam, descriptionParam, isMachine ? string.Format(", DepartmentId = @{0}", departmentParam) : string.Empty, idParam));
 						cmd.Parameters.AddRange(new[] {
 							new SqlParameter(nameParam, p.Name ?? string.Empty),
 							new SqlParameter(descriptionParam, p.Description ?? string.Empty),
 							new SqlParameter(idParam, p.Id)
 						});
 					}
-					stringBuilder.AppendLine("COMMIT TRANSACTION UpdateProducts");
+					stringBuilder.AppendLine("COMMIT TRANSACTION UpdateItems");
 					cmd.CommandText = stringBuilder.ToString();
 					cmd.Connection = connection;
 					cmd.ExecuteNonQuery();

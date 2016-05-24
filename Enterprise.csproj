@@ -288,12 +288,10 @@
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Manage\PersonalInfoPartial.cshtml" />
-    <Content Include="Views\Manage\EditProducts.cshtml" />
-    <Content Include="Views\Manage\EditorTemplates\Product.cshtml" />
+    <Content Include="Views\Manage\EditItems.cshtml" />
+    <Content Include="Views\Manage\EditorTemplates\Item.cshtml" />
     <Content Include="Views\Home\Error.cshtml" />
     <Content Include="Views\Home\NotFound.cshtml" />
-    <Content Include="Views\Manage\EditTasks.cshtml" />
-    <Content Include="Views\Manage\EditorTemplates\Task.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201604062110246_InitialCreate.resx">

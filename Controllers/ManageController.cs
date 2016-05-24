@@ -84,7 +84,7 @@ namespace Enterprise.Controllers
 			};
 
 			var user = UserManager.FindById(User.Identity.GetUserId());
-			var userViewModel = new UserViewModel
+			var userViewModel = new RegisterViewModel
 			{
 				BirthDate = user.BirthDate,
 				Email = user.Email,
@@ -99,7 +99,7 @@ namespace Enterprise.Controllers
 		}
 		
 		[HttpPost]
-		public async Task<ActionResult> Index(UserViewModel model)
+		public async Task<ActionResult> Index(RegisterViewModel model)
 		{
 			ManageMessageId? message = null;
 			if (ModelState.IsValid)
@@ -131,8 +131,15 @@ namespace Enterprise.Controllers
 		public ActionResult EditProducts(string message = null)
 		{
 			ViewBag.StatusMessage = message;
-			var list = EnterpriseDB.GetProducts();
-			return View(list);
+
+			var instance = new Product();
+			var list = EnterpriseDB.GetItems(instance);
+
+			ViewBag.Title = instance.Title;
+			ViewBag.ActionName = string.Format("Edit{0}s", instance.InheritorName);
+			ViewBag.AdditionalField = string.Empty;
+
+			return View("EditItems", list);
 		}
 
 		[Authorize(Roles = "Technologist")]
@@ -141,31 +148,42 @@ namespace Enterprise.Controllers
 		{
 			if (ModelState.IsValid)
 			{
-				EnterpriseDB.UpdateProducts(products);
+				EnterpriseDB.UpdateItems(products);
 				return RedirectToAction("Index", new {message = ManageMessageId.ProductsEditedSuccess});
 			}
-			return View(products);
+
+			var instance = new Product();
+			ViewBag.Title = instance.Title;
+			ViewBag.ActionName = string.Format("Edit{0}s", instance.InheritorName); ;
+			ViewBag.AdditionalField = string.Empty;
+
+			return View("EditItems", products);
 		}
 
 		[Authorize(Roles = "Technologist")]
 		public ActionResult DeleteProduct(int id)
 		{
 			var message = string.Empty;
-			if (EnterpriseDB.DeleteProduct(id))
+			if (EnterpriseDB.DeleteItem(id, "Product"))
 			{
 				message = "Виріб було успішно видалено.";
 			}
 			return RedirectToAction("EditProducts", new { message = message });
 		}
 
+		public ActionResult CreateProduct()
+		{
+			return View();
+		}
+
 		#endregion
 
 		#region Tasks
 
-		public ActionResult EditTasks(string message = null)
-		{
-			return View();
-		}
+		//public ActionResult EditTasks(string message = null)
+		//{
+		//	return View();
+		//}
 
 		#endregion
 

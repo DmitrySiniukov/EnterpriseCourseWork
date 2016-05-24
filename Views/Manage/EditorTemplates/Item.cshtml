@@ -1,0 +1,42 @@
+﻿@using Enterprise.Infrastructure;
+@using Enterprise.Models
+@model Item
+
+@{
+	var isMachineItem = Model is Machine;
+	var fullPart = isMachineItem ? 80d : 100d;
+}
+
+<tr>
+	@Html.HiddenFor(m => m.Id)
+	<td class="text-center" style="width: @string.Format("{0}%", fullPart/20); vertical-align: middle;">
+		@Model.Id
+	</td>
+	<td class="text-center" style="width: @string.Format("{0}%", fullPart/4); padding: 0; vertical-align: middle;">
+		@Html.TextBoxFor(m => m.Name)
+	</td>
+	@if (isMachineItem)
+	{
+		var machine = (Machine)Model;
+		var list = new List<SelectListItem> {new SelectListItem {Value = string.Empty, Text = string.Empty}};
+		list.AddRange(EnterpriseDB.GetItems(new Department()).Select(x => new SelectListItem {Value = x.Id.ToString(), Text = x.Name}));
+		list.First(x => x.Value == machine.DepartmentId.ToString()).Selected = true;
+		
+		<td style="width: 20%; padding: 0; vertical-align: middle;">
+			@Html.DropDownListFor(m => ((Machine)m).DepartmentId, list)
+		</td>
+	}
+	<td style="width: @string.Format("{0}%", 3*fullPart/10); padding: 0;">
+		@Html.TextAreaFor(m => m.Description, new {@style = "width: 100%; min-width: 100%;"})
+	</td>
+	<td class="text-center" style="@string.Format("{0}%", 3*fullPart/20); padding: 0; vertical-align: middle;">
+		@Model.CreationUserLogin
+	</td>
+	<td class="text-center" style="@string.Format("{0}%", 3*fullPart/20); padding: 0; vertical-align: middle;">
+		@Model.CreationDate.ToUkrDateTimeString()
+	</td>
+	<td class="text-center" style="@string.Format("{0}%", fullPart/10); vertical-align: middle;">
+		@*@Html.ActionLink("Edit", string.Format("Edit/{0}", item.Id), null, new { @style = "color: #ef8335;" }) |*@
+		@Html.ActionLink("Видалити", string.Format("Delete{0}/{1}", Model.InheritorName, Model.Id), null, new { @class="confirmation", @style = "color: red;" })
+	</td>
+</tr>
