@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using Enterprise.Infrastructure;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
@@ -14,6 +16,8 @@ namespace Enterprise.Controllers
 	[Authorize]
 	public class ManageController : Controller
 	{
+		#region Managers
+
 		private ApplicationSignInManager _signInManager;
 		private ApplicationUserManager _userManager;
 
@@ -51,6 +55,8 @@ namespace Enterprise.Controllers
 			}
 		}
 
+		#endregion
+
 		//
 		// GET: /Manage/Index
 		[HttpGet]
@@ -64,6 +70,7 @@ namespace Enterprise.Controllers
 			: message == ManageMessageId.AddPhoneSuccess ? "Your phone number was added."
 			: message == ManageMessageId.RemovePhoneSuccess ? "Your phone number was removed."
 			: message == ManageMessageId.ChangeDataSuccess ? "Дані користувача успішно збережені."
+			: message == ManageMessageId.ProductsEditedSuccess ? "Інформацію про вироби успішно збережено"
 			: "";
 
 			var userId = User.Identity.GetUserId();
@@ -116,6 +123,53 @@ namespace Enterprise.Controllers
 			var actionResult = await Index(message);
 			return actionResult;
 		}
+
+		#region Products
+
+		[Authorize(Roles = "Technologist")]
+		[HttpGet]
+		public ActionResult EditProducts(string message = null)
+		{
+			ViewBag.StatusMessage = message;
+			var list = EnterpriseDB.GetProducts();
+			return View(list);
+		}
+
+		[Authorize(Roles = "Technologist")]
+		[HttpPost]
+		public ActionResult EditProducts(IEnumerable<Product> products)
+		{
+			if (ModelState.IsValid)
+			{
+				EnterpriseDB.UpdateProducts(products);
+				return RedirectToAction("Index", new {message = ManageMessageId.ProductsEditedSuccess});
+			}
+			return View(products);
+		}
+
+		[Authorize(Roles = "Technologist")]
+		public ActionResult DeleteProduct(int id)
+		{
+			var message = string.Empty;
+			if (EnterpriseDB.DeleteProduct(id))
+			{
+				message = "Виріб було успішно видалено.";
+			}
+			return RedirectToAction("EditProducts", new { message = message });
+		}
+
+		#endregion
+
+		#region Tasks
+
+		public ActionResult EditTasks(string message = null)
+		{
+			return View();
+		}
+
+		#endregion
+
+		#region Third-party tools
 
 		//
 		// POST: /Manage/RemoveLogin
@@ -375,6 +429,8 @@ namespace Enterprise.Controllers
 			base.Dispose(disposing);
 		}
 
+		#endregion
+
 		#region Helpers
 		// Used for XSRF protection when adding external logins
 		private const string XsrfKey = "XsrfId";
@@ -424,7 +480,8 @@ namespace Enterprise.Controllers
 			RemoveLoginSuccess,
 			RemovePhoneSuccess,
 			Error,
-			ChangeDataSuccess
+			ChangeDataSuccess,
+			ProductsEditedSuccess
 		}
 
 		#endregion

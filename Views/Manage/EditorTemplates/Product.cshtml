@@ -1,0 +1,25 @@
+﻿@using Enterprise.Infrastructure;
+@model Enterprise.Models.Product
+
+<tr>
+	@Html.HiddenFor(m => m.Id)
+	<td class="text-center" style="width: 5%; vertical-align: middle;">
+		@Model.Id
+	</td>
+	<td class="text-center" style="width: 25%; padding: 0; vertical-align: middle;">
+		@Html.TextBoxFor(m => m.Name)
+	</td>
+	<td style="width: 30%; padding: 0;">
+		@Html.TextAreaFor(m => m.Description, new {@style = "width: 100%; min-width: 100%;"})
+	</td>
+	<td class="text-center" style="width: 15%; padding: 0; vertical-align: middle;">
+		@Model.CreationUserLogin
+	</td>
+	<td class="text-center" style="width: 15%; padding: 0; vertical-align: middle;">
+		@Model.CreationDate.ToUkrDateTimeString()
+	</td>
+	<td class="text-center" style="width: 10%; vertical-align: middle;">
+		@*@Html.ActionLink("Edit", string.Format("Edit/{0}", item.Id), null, new { @style = "color: #ef8335;" }) |*@
+		@Html.ActionLink("Видалити", string.Format("DeleteProduct/{0}", Model.Id), null, new { @class="confirmation", @style = "color: red;" })
+	</td>
+</tr>

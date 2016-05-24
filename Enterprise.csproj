@@ -204,6 +204,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\EnterpriseDB.cs" />
+    <Compile Include="Infrastructure\Extentions.cs" />
     <Compile Include="Migrations\201604062110246_InitialCreate.cs" />
     <Compile Include="Migrations\201604062110246_InitialCreate.Designer.cs">
       <DependentUpon>201604062110246_InitialCreate.cs</DependentUpon>
@@ -248,8 +249,11 @@
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
+    <Content Include="Scripts\Script.js" />
     <Content Include="Scripts\_references.js" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -283,9 +287,13 @@
     <Content Include="Views\Manage\VerifyPhoneNumber.cshtml" />
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
-    <Content Include="Views\Manage\_TechnologistPersonal.cshtml" />
-    <Content Include="Views\Manage\_EngineerPersonal.cshtml" />
     <Content Include="Views\Manage\PersonalInfoPartial.cshtml" />
+    <Content Include="Views\Manage\EditProducts.cshtml" />
+    <Content Include="Views\Manage\EditorTemplates\Product.cshtml" />
+    <Content Include="Views\Home\Error.cshtml" />
+    <Content Include="Views\Home\NotFound.cshtml" />
+    <Content Include="Views\Manage\EditTasks.cshtml" />
+    <Content Include="Views\Manage\EditorTemplates\Task.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201604062110246_InitialCreate.resx">
@@ -303,6 +311,7 @@
     <None Include="Project_Readme.html" />
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNet.Identity;
 using Microsoft.Owin.Security;
@@ -21,7 +22,47 @@ namespace Enterprise.Models
         public bool BrowserRemembered { get; set; }
     }
 
-    public class ManageLoginsViewModel
+	public class Product
+	{
+		[Display(Name = "Ідентифікатор")]
+		public int Id { get; set; }
+
+
+		[Display(Name = "Назва")]
+		[Required(ErrorMessage = "Назва виробу - обов'язкове поле.")]
+		public string Name { get; set; }
+
+		[Display(Name = "Опис")]
+		public string Description { get; set; }
+
+		public DateTime CreationDate { get; set; }
+
+		public string CreationUserId { get; set; }
+
+		public string CreationUserLogin { get; set; }
+	}
+
+	public class Task
+	{
+		public int Id { get; set; }
+
+		[Display(Name = "Назва")]
+		[Required(ErrorMessage = "Назва виробу - обов'язкове поле.")]
+		public string Name { get; set; }
+
+		[Display(Name = "Опис")]
+		public string Description { get; set; }
+
+		public DateTime CreationDate { get; set; }
+
+		public string CreationUserId { get; set; }
+
+		public string CreationUserLogin { get; set; }
+	}
+
+	#region Third-party models
+
+	public class ManageLoginsViewModel
     {
         public IList<UserLoginInfo> CurrentLogins { get; set; }
         public IList<AuthenticationDescription> OtherLogins { get; set; }
@@ -90,4 +131,6 @@ namespace Enterprise.Models
         public string SelectedProvider { get; set; }
         public ICollection<System.Web.Mvc.SelectListItem> Providers { get; set; }
     }
+
+	#endregion
 }

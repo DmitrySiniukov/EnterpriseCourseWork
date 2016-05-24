@@ -100,35 +100,6 @@ namespace Enterprise.Models
 		[Display(Name = "Підтвердження пароля")]
 		[Compare("Password", ErrorMessage = "Пароль і підтвердження не співпадають.")]
 		public string ConfirmPassword { get; set; }
-
-
-		public static List<IdentityRole<string, IdentityUserRole>> GetAvailableRoles()
-		{
-			var result = new List<IdentityRole<string, IdentityUserRole>>();
-
-			using (var connection = new SqlConnection(EnterpriseDB.DefaultConnection))
-			{
-				connection.Open();
-				using (var cmd = new SqlCommand())
-				{
-					cmd.CommandText = @"select Id, Name from AspNetRoles";
-					cmd.Connection = connection;
-					using (var reader = cmd.ExecuteReader())
-					{
-						while (reader.Read())
-						{
-							result.Add(new IdentityRole()
-							{
-								Id = reader.GetFieldValue<string>(0),
-								Name = reader.GetFieldValue<string>(1)
-							});
-						}
-					}
-				}
-				connection.Close();
-			}
-			return result;
-		}
 	}
 
 	public class ResetPasswordViewModel
