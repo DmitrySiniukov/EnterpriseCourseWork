@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using Enterprise.Models;
+using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace Enterprise.Infrastructure
@@ -89,7 +90,7 @@ namespace Enterprise.Infrastructure
 								);
 							if (isMachine)
 							{
-								var machine = (Machine)item;
+								var machine = (Machine) item;
 								machine.DepartmentId = reader.IsDBNull(6) ? 0 : reader.GetFieldValue<int>(6);
 								machine.DepartmentName = reader.GetFieldValue<string>(7);
 							}
@@ -152,12 +153,16 @@ namespace Enterprise.Infrastructure
 						if (isMachine)
 						{
 							departmentParam = string.Format("departmentParam{0}", i);
-							cmd.Parameters.AddWithValue(departmentParam, ((Machine)p).DepartmentId);
+							var id = ((Machine) p).DepartmentId;
+							cmd.Parameters.AddWithValue(departmentParam, id == 0 ? (object) DBNull.Value : id);
 						}
 
-						stringBuilder.AppendLine(string.Format("update {0}s set Name = @{1}, Description = @{2}{3} where Id = @{4}", instance.InheritorName,
-							nameParam, descriptionParam, isMachine ? string.Format(", DepartmentId = @{0}", departmentParam) : string.Empty, idParam));
-						cmd.Parameters.AddRange(new[] {
+						stringBuilder.AppendLine(string.Format("update {0}s set Name = @{1}, Description = @{2}{3} where Id = @{4}",
+							instance.InheritorName,
+							nameParam, descriptionParam, isMachine ? string.Format(", DepartmentId = @{0}", departmentParam) : string.Empty,
+							idParam));
+						cmd.Parameters.AddRange(new[]
+						{
 							new SqlParameter(nameParam, p.Name ?? string.Empty),
 							new SqlParameter(descriptionParam, p.Description ?? string.Empty),
 							new SqlParameter(idParam, p.Id)
@@ -166,6 +171,34 @@ namespace Enterprise.Infrastructure
 					stringBuilder.AppendLine("COMMIT TRANSACTION UpdateItems");
 					cmd.CommandText = stringBuilder.ToString();
 					cmd.Connection = connection;
+					cmd.ExecuteNonQuery();
+				}
+				connection.Close();
+			}
+		}
+
+		public static void CreateItem(Item item, string userId)
+		{
+			var machine = item as Machine;
+			using (var connection = new SqlConnection(DefaultConnection))
+			{
+				connection.Open();
+				using (var cmd = new SqlCommand())
+				{
+					cmd.CommandText = string.Format(
+						@"insert {0}s (Name, Description, C_Date, C_User{1}) values (@nameParam, @descrParam, @dateParam, @userParam{2})",
+						item.InheritorName, machine == null ? string.Empty : ", DepartmentId",
+						machine == null ? string.Empty : ", @departmentParam");
+					cmd.Connection = connection;
+					cmd.Parameters.AddWithValue("nameParam", item.Name);
+					cmd.Parameters.AddWithValue("descrParam", item.Description);
+					cmd.Parameters.AddWithValue("dateParam", DateTime.Now);
+					cmd.Parameters.AddWithValue("userParam", userId);
+					
+					if (machine != null)
+					{
+						cmd.Parameters.AddWithValue("departmentParam", machine.DepartmentId == 0 ? (object)DBNull.Value : machine.DepartmentId);
+					}
 					cmd.ExecuteNonQuery();
 				}
 				connection.Close();

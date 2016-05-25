@@ -85,7 +85,7 @@ namespace Enterprise.Models
 
 		[Display(Name = "Дата народження")]
 		[DataType(DataType.Date)]
-		public DateTime BirthDate { get; set; }
+		public DateTime? BirthDate { get; set; }
 
 		[Display(Name = "Роль")]
 		public string Role { get; set; }
@@ -95,8 +95,7 @@ namespace Enterprise.Models
 		[DataType(DataType.Password)]
 		[Display(Name = "Пароль")]
 		public string Password { get; set; }
-
-		[Required(ErrorMessage = "Підтвердження пароля - обов'язкове поле")]
+		
 		[DataType(DataType.Password)]
 		[Display(Name = "Підтвердження пароля")]
 		[Compare("Password", ErrorMessage = "Пароль і підтвердження не співпадають.")]
@@ -115,8 +114,7 @@ namespace Enterprise.Models
 		[DataType(DataType.Password)]
 		[Display(Name = "Пароль")]
 		public string Password { get; set; }
-
-		[Required(ErrorMessage = "Підтвердження пароля - обов'язкове поле")]
+		
 		[DataType(DataType.Password)]
 		[Display(Name = "Підтвердження пароля")]
 		[Compare("Password", ErrorMessage = "Пароль і підтвердження не співпадають.")]

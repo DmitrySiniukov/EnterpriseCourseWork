@@ -18,7 +18,7 @@
 	@if (isMachineItem)
 	{
 		var machine = (Machine)Model;
-		var list = new List<SelectListItem> {new SelectListItem {Value = string.Empty, Text = string.Empty}};
+		var list = new List<SelectListItem> {new SelectListItem {Value = "0", Text = string.Empty}};
 		list.AddRange(EnterpriseDB.GetItems(new Department()).Select(x => new SelectListItem {Value = x.Id.ToString(), Text = x.Name}));
 		list.First(x => x.Value == machine.DepartmentId.ToString()).Selected = true;
 		
@@ -37,6 +37,6 @@
 	</td>
 	<td class="text-center" style="@string.Format("{0}%", fullPart/10); vertical-align: middle;">
 		@*@Html.ActionLink("Edit", string.Format("Edit/{0}", item.Id), null, new { @style = "color: #ef8335;" }) |*@
-		@Html.ActionLink("Видалити", string.Format("Delete{0}/{1}", Model.InheritorName, Model.Id), null, new { @class="confirmation", @style = "color: red;" })
+		@Html.ActionLink(string.Format("Видалити {0}", Model.InheritorNameUrk), string.Format("Delete{0}/{1}", Model.InheritorName, Model.Id), null, new { @class="confirmation", @style = "color: red;" })
 	</td>
 </tr>

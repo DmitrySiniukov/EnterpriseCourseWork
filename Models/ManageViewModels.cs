@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Entity;
+using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.Owin.Security;
 
@@ -26,6 +27,8 @@ namespace Enterprise.Models
 	public abstract class Item
 	{
 		public abstract string InheritorName { get; }
+
+		public abstract string InheritorNameUrk { get; }
 
 		public abstract string Title { get; }
 
@@ -74,6 +77,11 @@ namespace Enterprise.Models
 			get { return "Product"; }
 		}
 
+		public override string InheritorNameUrk
+		{
+			get { return "Виріб"; }
+		}
+
 		public override string Title
 		{
 			get { return "Редагування виробів"; }
@@ -100,6 +108,11 @@ namespace Enterprise.Models
 		public override string InheritorName
 		{
 			get { return "Task"; }
+		}
+
+		public override string InheritorNameUrk
+		{
+			get { return "Роботу"; }
 		}
 
 		public override string Title
@@ -135,6 +148,11 @@ namespace Enterprise.Models
 			get { return "Machine"; }
 		}
 
+		public override string InheritorNameUrk
+		{
+			get { return "Прилад"; }
+		}
+
 		public override string Title
 		{
 			get { return "Редагування приладів"; }
@@ -165,6 +183,11 @@ namespace Enterprise.Models
 		public override string InheritorName
 		{
 			get { return "Department"; }
+		}
+
+		public override string InheritorNameUrk
+		{
+			get { return "Відділ"; }
 		}
 
 		public override string Title
@@ -208,11 +231,10 @@ namespace Enterprise.Models
 		[DataType(DataType.Password)]
 		[Display(Name = "Пароль")]
 		public string NewPassword { get; set; }
-
-		[Required(ErrorMessage = "Підтвердження пароля - обов'язкове поле")]
+		
 		[DataType(DataType.Password)]
 		[Display(Name = "Підтвердження пароля")]
-		[Compare("Password", ErrorMessage = "Пароль і підтвердження не співпадають.")]
+		[System.ComponentModel.DataAnnotations.Compare("NewPassword", ErrorMessage = "Пароль і підтвердження не співпадають.")]
 		public string ConfirmPassword { get; set; }
 	}
 
@@ -229,10 +251,9 @@ namespace Enterprise.Models
 		[Display(Name = "Новий пароль")]
 		public string NewPassword { get; set; }
 
-		[Required(ErrorMessage = "Підтвердження пароля - обов'язкове поле")]
 		[DataType(DataType.Password)]
 		[Display(Name = "Підтвердження пароля")]
-		[Compare("Password", ErrorMessage = "Пароль і підтвердження не співпадають.")]
+		[System.ComponentModel.DataAnnotations.Compare("NewPassword", ErrorMessage = "Пароль і підтвердження не співпадають.")]
 		public string ConfirmPassword { get; set; }
 	}
 

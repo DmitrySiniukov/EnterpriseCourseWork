@@ -19,7 +19,7 @@ namespace Enterprise.Models
 		/// <summary>
 		/// Date of birth
 		/// </summary>
-	    public DateTime BirthDate { get; set; }
+	    public DateTime? BirthDate { get; set; }
 
 
 	    public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager)

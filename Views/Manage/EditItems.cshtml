@@ -32,7 +32,7 @@
 		</table>
 		<div class="form-group">
 			<div class="text-center">
-				<input type="submit" class="btn btn-default" value="Зберегти" />
+				<input type="submit" class="btn btn-default" value="Зберегти" @(Model.Count() == 0 ? "disabled" : string.Empty)/>
 			</div>
 		</div>
 		}

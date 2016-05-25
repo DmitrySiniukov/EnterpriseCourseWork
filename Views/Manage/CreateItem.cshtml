@@ -1,0 +1,48 @@
+﻿@using Enterprise.Infrastructure
+@using Enterprise.Models
+@model Item
+@{
+	var isMachine = Model is Machine;
+}
+
+<h2>@ViewBag.Title.</h2>
+
+@using (Html.BeginForm(string.Format("Create{0}", Model.InheritorName), "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+{
+	<h4>@string.Format("Створити {0}", Model.InheritorNameUrk)</h4>
+	<hr />
+	@Html.ValidationSummary("", new { @class = "text-danger" })
+	<div class="form-group">
+		@Html.LabelFor(m => m.Name, new { @class = "col-md-2 control-label" })
+		<div class="col-md-10">
+			@Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+		</div>
+	</div>
+	<div class="form-group">
+		@Html.LabelFor(m => m.Description, new { @class = "col-md-2 control-label" })
+		<div class="col-md-10">
+			@Html.TextBoxFor(m => m.Description, new { @class = "form-control" })
+		</div>
+	</div>
+	if (isMachine)
+	{
+		var list = new List<SelectListItem> { new SelectListItem { Value = "0", Text = string.Empty } };
+		list.AddRange(EnterpriseDB.GetItems(new Department()).Select(x => new SelectListItem { Value = x.Id.ToString(), Text = x.Name }));
+
+		<div class="form-group">
+			@Html.LabelFor(m => ((Machine)m).DepartmentId, new { @class = "col-md-2 control-label" })
+			<div class="col-md-10">
+				@Html.DropDownListFor(m => ((Machine)m).DepartmentId, list, new { @class = "form-control" })
+			</div>
+		</div>
+	}
+	<div class="form-group">
+		<div class="col-md-offset-2 col-md-10">
+			<input type="submit" class="btn btn-default" value="@string.Format("Зберегти {0}", Model.InheritorNameUrk)" />
+		</div>
+	</div>
+			}
+
+@section Scripts {
+	@Scripts.Render("~/bundles/jqueryval")
+}

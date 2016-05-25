@@ -171,9 +171,24 @@ namespace Enterprise.Controllers
 			return RedirectToAction("EditProducts", new { message = message });
 		}
 
+		[Authorize(Roles = "Technologist")]
+		[HttpGet]
 		public ActionResult CreateProduct()
 		{
-			return View();
+			var instance = new Product();
+			return View("CreateItem", instance);
+		}
+
+		[Authorize(Roles = "Technologist")]
+		[HttpPost]
+		public ActionResult CreateProduct(Product product)
+		{
+			if (ModelState.IsValid)
+			{
+				EnterpriseDB.CreateItem(product, User.Identity.GetUserId());
+				return RedirectToAction("EditProducts", new { message = "Виріб успішно збережено." });
+			}
+			return View("CreateItem", product);
 		}
 
 		#endregion
