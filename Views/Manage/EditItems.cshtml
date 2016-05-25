@@ -1,7 +1,15 @@
 ﻿@using Enterprise.Models
+@using Microsoft.CSharp.RuntimeBinder
 @model IEnumerable<Item>
 @{
-	Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    Item  instance = ViewBag.Instance;
+    if (instance == null)
+    {
+        throw new Exception("An item instance hasn`t been passed in the view.");
+    }
+    ViewBag.Title = instance.Title;
+    var machine = instance as Machine;
 }
 
 <h2>
@@ -15,26 +23,33 @@
 
 <div class="panel">
 	<div class="panel-body">
-		@using (Html.BeginForm((string)ViewBag.ActionName, "Manage", FormMethod.Post))
+		<div>
+			@Html.ActionLink(string.Format("Додати {0}", instance.InheritorNameUrk.ToLower()), string.Format("Create{0}", instance.InheritorName), "Manage", htmlAttributes: new { @class = "btn btn-default", @style = "margin-right: 10px;" }, routeValues: null)
+		</div>
+		<hr />
+		@using (Html.BeginForm(string.Format("Edit{0}s", instance.InheritorName), "Manage", FormMethod.Post))
 		{
 			@Html.ValidationSummary()
 			<table class="content-table table table-striped table-condensed table-bordered">
 				<tr>
 					<th class="text-center">id</th>
-					<th class="text-center">Назва</th>
-					@ViewBag.AdditionalField
-				<th class="text-center">Опис</th>
-				<th class="text-center">Ким створено (логін)</th>
-				<th class="text-center">Дата створення</th>
-				<th class="text-center">Дії</th>
-			</tr>
-			@Html.EditorForModel()
-		</table>
-		<div class="form-group">
-			<div class="text-center">
-				<input type="submit" class="btn btn-default" value="Зберегти" @(Model.Count() == 0 ? "disabled" : string.Empty)/>
+					<th class="text-center">Назва*</th>
+					@if (machine != null)
+					{
+						<th class="text-center">Відділ</th>
+					}
+					<th class="text-center">Опис</th>
+					<th class="text-center">Ким створено (логін)</th>
+					<th class="text-center">Дата створення</th>
+					<th class="text-center">Дії</th>
+				</tr>
+				@Html.EditorForModel()
+			</table>
+			<div class="form-group">
+				<div class="text-center">
+					<input type="submit" class="btn btn-default" value="Зберегти" @(Model.Any() ? string.Empty : "disabled")/>
+				</div>
 			</div>
-		</div>
 		}
 	</div>
 </div>

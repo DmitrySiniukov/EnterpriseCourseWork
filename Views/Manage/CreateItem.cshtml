@@ -2,15 +2,15 @@
 @using Enterprise.Models
 @model Item
 @{
-	var isMachine = Model is Machine;
+    var isMachine = Model is Machine;
+    ViewBag.Title = string.Format("Створити {0}", Model.InheritorNameUrk.ToLower());
 }
 
-<h2>@ViewBag.Title.</h2>
+<h2>@ViewBag.Title</h2>
+<hr />
 
 @using (Html.BeginForm(string.Format("Create{0}", Model.InheritorName), "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
 {
-	<h4>@string.Format("Створити {0}", Model.InheritorNameUrk)</h4>
-	<hr />
 	@Html.ValidationSummary("", new { @class = "text-danger" })
 	<div class="form-group">
 		@Html.LabelFor(m => m.Name, new { @class = "col-md-2 control-label" })
@@ -27,7 +27,7 @@
 	if (isMachine)
 	{
 		var list = new List<SelectListItem> { new SelectListItem { Value = "0", Text = string.Empty } };
-		list.AddRange(EnterpriseDB.GetItems(new Department()).Select(x => new SelectListItem { Value = x.Id.ToString(), Text = x.Name }));
+		list.AddRange(Repository.GetItems(new Department()).Select(x => new SelectListItem { Value = x.Id.ToString(), Text = x.Name }));
 
 		<div class="form-group">
 			@Html.LabelFor(m => ((Machine)m).DepartmentId, new { @class = "col-md-2 control-label" })
@@ -38,7 +38,7 @@
 	}
 	<div class="form-group">
 		<div class="col-md-offset-2 col-md-10">
-			<input type="submit" class="btn btn-default" value="@string.Format("Зберегти {0}", Model.InheritorNameUrk)" />
+			<input type="submit" class="btn btn-default" value="@string.Format("Зберегти {0}", Model.InheritorNameUrk.ToLower())" />
 		</div>
 	</div>
 			}

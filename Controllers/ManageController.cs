@@ -70,7 +70,7 @@ namespace Enterprise.Controllers
 			: message == ManageMessageId.AddPhoneSuccess ? "Your phone number was added."
 			: message == ManageMessageId.RemovePhoneSuccess ? "Your phone number was removed."
 			: message == ManageMessageId.ChangeDataSuccess ? "Дані користувача успішно збережені."
-			: message == ManageMessageId.ProductsEditedSuccess ? "Інформацію про вироби успішно збережено"
+			: message == ManageMessageId.ItemsEditedSuccess ? "Інформацію успішно збережено"
 			: "";
 
 			var userId = User.Identity.GetUserId();
@@ -94,10 +94,10 @@ namespace Enterprise.Controllers
 				Password = user.PasswordHash,
 				ConfirmPassword = user.PasswordHash
 			};
-			var model = new PersonalAreaModel {CommonData = commonData, UserInfo = userViewModel };
+			var model = new PersonalAreaModel { CommonData = commonData, UserInfo = userViewModel };
 			return View(model);
 		}
-		
+
 		[HttpPost]
 		public async Task<ActionResult> Index(RegisterViewModel model)
 		{
@@ -130,75 +130,208 @@ namespace Enterprise.Controllers
 		[HttpGet]
 		public ActionResult EditProducts(string message = null)
 		{
-			ViewBag.StatusMessage = message;
-
-			var instance = new Product();
-			var list = EnterpriseDB.GetItems(instance);
-
-			ViewBag.Title = instance.Title;
-			ViewBag.ActionName = string.Format("Edit{0}s", instance.InheritorName);
-			ViewBag.AdditionalField = string.Empty;
-
-			return View("EditItems", list);
+			return editItems(new Product(), message);
 		}
 
 		[Authorize(Roles = "Technologist")]
 		[HttpPost]
 		public ActionResult EditProducts(IEnumerable<Product> products)
 		{
-			if (ModelState.IsValid)
-			{
-				EnterpriseDB.UpdateItems(products);
-				return RedirectToAction("Index", new {message = ManageMessageId.ProductsEditedSuccess});
-			}
-
-			var instance = new Product();
-			ViewBag.Title = instance.Title;
-			ViewBag.ActionName = string.Format("Edit{0}s", instance.InheritorName); ;
-			ViewBag.AdditionalField = string.Empty;
-
-			return View("EditItems", products);
+			return editItems(new Product(), products);
 		}
 
 		[Authorize(Roles = "Technologist")]
 		public ActionResult DeleteProduct(int id)
 		{
-			var message = string.Empty;
-			if (EnterpriseDB.DeleteItem(id, "Product"))
-			{
-				message = "Виріб було успішно видалено.";
-			}
-			return RedirectToAction("EditProducts", new { message = message });
+			return deleteItem(new Product(), id);
 		}
 
 		[Authorize(Roles = "Technologist")]
 		[HttpGet]
 		public ActionResult CreateProduct()
 		{
-			var instance = new Product();
-			return View("CreateItem", instance);
+			return createItem(new Product());
 		}
 
 		[Authorize(Roles = "Technologist")]
 		[HttpPost]
 		public ActionResult CreateProduct(Product product)
 		{
-			if (ModelState.IsValid)
-			{
-				EnterpriseDB.CreateItem(product, User.Identity.GetUserId());
-				return RedirectToAction("EditProducts", new { message = "Виріб успішно збережено." });
-			}
-			return View("CreateItem", product);
+			return createItemPost(product);
 		}
 
 		#endregion
 
 		#region Tasks
 
-		//public ActionResult EditTasks(string message = null)
-		//{
-		//	return View();
-		//}
+		[Authorize(Roles = "Technologist")]
+		[HttpGet]
+		public ActionResult EditTasks(string message = null)
+		{
+			return editItems(new Models.Task(), message);
+		}
+
+		[Authorize(Roles = "Technologist")]
+		[HttpPost]
+		public ActionResult EditTasks(IEnumerable<Models.Task> tasks)
+		{
+			return editItems(new Models.Task(), tasks);
+		}
+
+		[Authorize(Roles = "Technologist")]
+		public ActionResult DeleteTask(int id)
+		{
+			return deleteItem(new Models.Task(), id);
+		}
+
+		[Authorize(Roles = "Technologist")]
+		[HttpGet]
+		public ActionResult CreateTask()
+		{
+			return createItem(new Models.Task());
+		}
+
+		[Authorize(Roles = "Technologist")]
+		[HttpPost]
+		public ActionResult CreateTask(Models.Task task)
+		{
+			return createItemPost(task);
+		}
+
+		#endregion
+		
+		#region Machines
+
+		[Authorize(Roles = "Engineer")]
+		[HttpGet]
+		public ActionResult EditMachines(string message = null)
+		{
+			return editItems(new Machine(), message);
+		}
+
+		[Authorize(Roles = "Engineer")]
+		[HttpPost]
+		public ActionResult EditMachines(IEnumerable<Machine> machines)
+		{
+			return editItems(new Machine(), machines);
+		}
+
+		[Authorize(Roles = "Engineer")]
+		public ActionResult DeleteMachine(int id)
+		{
+			return deleteItem(new Machine(), id);
+		}
+
+		[Authorize(Roles = "Engineer")]
+		[HttpGet]
+		public ActionResult CreateMachine()
+		{
+			return createItem(new Machine());
+		}
+
+		[Authorize(Roles = "Engineer")]
+		[HttpPost]
+		public ActionResult CreateMachine(Machine machine)
+		{
+			return createItemPost(machine);
+		}
+
+		#endregion
+
+		#region Departments
+
+		[Authorize(Roles = "Engineer")]
+		[HttpGet]
+		public ActionResult EditDepartments(string message = null)
+		{
+			return editItems(new Department(), message);
+		}
+
+		[Authorize(Roles = "Engineer")]
+		[HttpPost]
+		public ActionResult EditDepartments(IEnumerable<Department> departments)
+		{
+			return editItems(new Department(), departments);
+		}
+
+		[Authorize(Roles = "Engineer")]
+		public ActionResult DeleteDepartment(int id)
+		{
+			return deleteItem(new Department(), id);
+		}
+
+		[Authorize(Roles = "Engineer")]
+		[HttpGet]
+		public ActionResult CreateDepartment()
+		{
+			return createItem(new Department());
+		}
+
+		[Authorize(Roles = "Engineer")]
+		[HttpPost]
+		public ActionResult CreateDepartment(Department department)
+		{
+			return createItemPost(department);
+		}
+
+		#endregion
+
+	    public ActionResult Schedule()
+	    {
+		    var machines = Repository.GetItems(new Machine());
+
+	        return View();
+	    }
+
+	    #region Common actions
+
+		private ActionResult editItems(Item instance, string message = null)
+		{
+			ViewBag.StatusMessage = message;
+
+			ViewBag.Instance = instance;
+			var list = Repository.GetItems(instance);
+
+			return View("EditItems", list);
+		}
+
+		private ActionResult editItems(Item instance, IEnumerable<Item> items)
+		{
+			if (ModelState.IsValid)
+			{
+				Repository.UpdateItems(items);
+				return RedirectToAction("Index", new {message = ManageMessageId.ItemsEditedSuccess});
+			}
+
+			ViewBag.Instance = instance;
+			return View("EditItems", items);
+		}
+		
+		private ActionResult deleteItem(Item instance, int id)
+		{
+			var message = string.Empty;
+			if (Repository.DeleteItem(id, instance.InheritorName))
+			{
+				message = string.Format("{0} було успішно видалено.", instance.InheritorNameUrk);
+			}
+			return RedirectToAction(string.Format("Edit{0}s", instance.InheritorName), new { message = message });
+		}
+		
+		private ActionResult createItem(Item instance)
+		{
+			return View("CreateItem", instance);
+		}
+
+		private ActionResult createItemPost(Item instance)
+		{
+			if (ModelState.IsValid)
+			{
+				Repository.CreateItem(instance, User.Identity.GetUserId());
+				return RedirectToAction(string.Format("Edit{0}s", instance.InheritorName),
+					new { message = string.Format("{0} успішно збережено.", instance.InheritorNameUrk) });
+			}
+			return View("CreateItem", instance);
+		}
 
 		#endregion
 
@@ -359,6 +492,7 @@ namespace Enterprise.Controllers
 			{
 				return View(model);
 			}
+
 			var result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
 			if (result.Succeeded)
 			{
@@ -369,7 +503,8 @@ namespace Enterprise.Controllers
 				}
 				return RedirectToAction("Index", new { Message = ManageMessageId.ChangePasswordSuccess });
 			}
-			AddErrors(result);
+
+			ModelState.AddModelError("OldPassword", "Невірний пароль");
 			return View(model);
 		}
 
@@ -514,7 +649,7 @@ namespace Enterprise.Controllers
 			RemovePhoneSuccess,
 			Error,
 			ChangeDataSuccess,
-			ProductsEditedSuccess
+			ItemsEditedSuccess
 		}
 
 		#endregion

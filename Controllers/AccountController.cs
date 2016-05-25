@@ -159,6 +159,13 @@ namespace Enterprise.Controllers
 					BirthDate = model.BirthDate,
 					UserName = model.UserName
 				};
+
+				if (UserManager.Users.Any(x => x.UserName == user.UserName))
+				{
+					ModelState.AddModelError("UserName", "Користувач з таким логіном вже існує(. Виберіть інше ім'я користувача.");
+					return View(model);
+				}
+
 				user.Roles.Add(new IdentityUserRole { RoleId = model.Role, UserId = user.Id });
 
 				var result = await UserManager.CreateAsync(user, model.Password);

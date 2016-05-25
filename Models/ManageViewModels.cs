@@ -35,11 +35,13 @@ namespace Enterprise.Models
 
 		public int Id { get; set; }
 
+		[Display(Name="Назва*")]
 		[Required(ErrorMessage = "Назва - обов'язкове поле.")]
 		public string Name { get; set; }
 
+		[Display(Name = "Опис")]
 		public string Description { get; set; }
-
+		
 		public DateTime CreationDate { get; set; }
 
 		public string CreationUserId { get; set; }
@@ -79,12 +81,12 @@ namespace Enterprise.Models
 
 		public override string InheritorNameUrk
 		{
-			get { return "Виріб"; }
+			get { return "Продукт"; }
 		}
 
 		public override string Title
 		{
-			get { return "Редагування виробів"; }
+			get { return "Редагування продуктів"; }
 		}
 
 		public override Item Create(int id, string name, string description, DateTime creationDate, string creationUserId, string creationUserLogin)
@@ -138,6 +140,7 @@ namespace Enterprise.Models
 
 	public class Machine : Item
 	{
+		[Display(Name = "Відділ")]
 		public int DepartmentId { get; set; }
 
 		public string DepartmentName { get; set; }
@@ -229,11 +232,12 @@ namespace Enterprise.Models
 		[Required(ErrorMessage = "Пароль - обов'язкове поле")]
 		[StringLength(100, ErrorMessage = "{0} повинен містити хоча б {2} символів.", MinimumLength = 6)]
 		[DataType(DataType.Password)]
-		[Display(Name = "Пароль")]
+		[Display(Name = "Пароль*")]
 		public string NewPassword { get; set; }
-		
+
+		[Required(ErrorMessage = "Введіть підтвердження пароля")]
 		[DataType(DataType.Password)]
-		[Display(Name = "Підтвердження пароля")]
+		[Display(Name = "Підтвердження пароля*")]
 		[System.ComponentModel.DataAnnotations.Compare("NewPassword", ErrorMessage = "Пароль і підтвердження не співпадають.")]
 		public string ConfirmPassword { get; set; }
 	}
@@ -242,17 +246,18 @@ namespace Enterprise.Models
 	{
 		[Required(ErrorMessage = "Введіть поточний пароль")]
 		[DataType(DataType.Password)]
-		[Display(Name = "Поточний пароль")]
+		[Display(Name = "Поточний пароль*")]
 		public string OldPassword { get; set; }
 
 		[Required(ErrorMessage = "Введіть новий пароль")]
 		[StringLength(100, ErrorMessage = "{0} повинен містити хоча б {2} символів.", MinimumLength = 6)]
 		[DataType(DataType.Password)]
-		[Display(Name = "Новий пароль")]
+		[Display(Name = "Новий пароль*")]
 		public string NewPassword { get; set; }
 
+		[Required(ErrorMessage = "Введіть підтвердження пароля")]
 		[DataType(DataType.Password)]
-		[Display(Name = "Підтвердження пароля")]
+		[Display(Name = "Підтвердження пароля*")]
 		[System.ComponentModel.DataAnnotations.Compare("NewPassword", ErrorMessage = "Пароль і підтвердження не співпадають.")]
 		public string ConfirmPassword { get; set; }
 	}
