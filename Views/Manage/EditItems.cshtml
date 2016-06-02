@@ -3,13 +3,12 @@
 @model IEnumerable<Item>
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    Item  instance = ViewBag.Instance;
+    var instance = ViewBag.Instance as Item;
     if (instance == null)
     {
         throw new Exception("An item instance hasn`t been passed in the view.");
     }
     ViewBag.Title = instance.Title;
-    var machine = instance as Machine;
 }
 
 <h2>
@@ -34,10 +33,14 @@
 				<tr>
 					<th class="text-center">id</th>
 					<th class="text-center">Назва*</th>
-					@if (machine != null)
+					@if (instance is Machine)
 					{
-						<th class="text-center">Відділ</th>
+						<th class="text-center">Дільниця</th>
 					}
+                    @if (instance is Product)
+                    {
+                        <th class="text-center">Дедлайн*</th>
+                    }
 					<th class="text-center">Опис</th>
 					<th class="text-center">Ким створено (логін)</th>
 					<th class="text-center">Дата створення</th>

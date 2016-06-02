@@ -8,7 +8,9 @@ namespace Enterprise
         // For more information on bundling, visit http://go.microsoft.com/fwlink/?LinkId=301862
         public static void RegisterBundles(BundleCollection bundles)
         {
-			bundles.Add(new ScriptBundle("~/bundles/script").Include("~/Scripts/Script.js"));
+			bundles.Add(new ScriptBundle("~/bundles/script").Include("~/Scripts/Script.js",
+                "~/Scripts/gantt/dhtmlxgantt.js", "~/Scripts/jquery-1.10.2.min.js",
+                "~/Scripts/build/jquery.datetimepicker.full.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/jquery").Include(
                         "~/Scripts/jquery-{version}.js"));
@@ -27,7 +29,7 @@ namespace Enterprise
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
-                      "~/Content/Site.css"));
+                      "~/Content/Site.css", "~/Scripts/gantt/dhtmlxgantt.css", "~/Scripts/jquery.datetimepicker.css"));
         }
     }
 }

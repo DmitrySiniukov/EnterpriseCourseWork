@@ -89,19 +89,27 @@ namespace Enterprise.Models
 			get { return "Редагування продуктів"; }
 		}
 
-		public override Item Create(int id, string name, string description, DateTime creationDate, string creationUserId, string creationUserLogin)
+        [Required(ErrorMessage = "Введить дедлайн")]
+        [Display(Name = "Дедлайн*")]
+        [DataType(DataType.DateTime, ErrorMessage = "Дедлайн - значення типу дата-час.")]
+        public DateTime? Deadline { get; set; }
+
+
+        public override Item Create(int id, string name, string description, DateTime creationDate, string creationUserId, string creationUserLogin)
 		{
-			return new Product(id, name, description, creationDate, creationUserId, creationUserLogin);
+			return new Product(id, name, null, description, creationDate, creationUserId, creationUserLogin);
 		}
 
 
 		public Product()
 		{
+		    Deadline = null;
 		}
 
-		public Product(int id, string name, string description, DateTime creationDate, string creationUserId, string creationUserLogin)
+		public Product(int id, string name, DateTime? deadline, string description, DateTime creationDate, string creationUserId, string creationUserLogin)
 		: base(id, name, description, creationDate, creationUserId, creationUserLogin)
 		{
+		    Deadline = deadline;
 		}
 	}
 
@@ -140,7 +148,7 @@ namespace Enterprise.Models
 
 	public class Machine : Item
 	{
-		[Display(Name = "Відділ")]
+		[Display(Name = "Дільниця")]
 		public int DepartmentId { get; set; }
 
 		public string DepartmentName { get; set; }
@@ -190,12 +198,12 @@ namespace Enterprise.Models
 
 		public override string InheritorNameUrk
 		{
-			get { return "Відділ"; }
+			get { return "Дільницю"; }
 		}
 
 		public override string Title
 		{
-			get { return "Редагування відділів"; }
+			get { return "Редагування дільниць"; }
 		}
 
 		public override Item Create(int id, string name, string description, DateTime creationDate, string creationUserId, string creationUserLogin)
@@ -214,7 +222,54 @@ namespace Enterprise.Models
 		}
 	}
 
-	#region Third-party models
+	public class Technology
+	{
+		public int Id { get; set; }
+		
+		public int ProductId { get; set; }
+
+		[Required(ErrorMessage = "Виберіть операцію")]
+		[Display(Name="Операція*")]
+		public int TaskId { get; set; }
+		
+		[Required(ErrorMessage = "Введіть тривалість")]
+		[Display(Name = "Тривалість, с*")]
+		[DataType(DataType.Duration, ErrorMessage = "Тривалість - дійсне додатнє число.")]
+		public double Duration { get; set; }
+
+		[Display(Name = "Опис")]
+		public string Description { get; set; }
+	}
+
+	public class Technologies : List<Technology>
+	{
+		public int ProductId { get; set; }
+
+		public string ProductName { get; set; }
+	}
+
+    public class Compatibility
+    {
+        public Task Task { get; set; }
+
+        public bool IsCompatible { get; set; }
+    }
+
+    public class Compatibilities : List<Compatibility>
+    {
+        public Department Department { get; set; }
+
+
+        public Compatibilities()
+        {
+        }
+
+        public Compatibilities(IEnumerable<Compatibility> compatibilities) : base(compatibilities)
+        {
+        }
+    }
+
+    #region Third-party models
 
 	public class ManageLoginsViewModel
 	{

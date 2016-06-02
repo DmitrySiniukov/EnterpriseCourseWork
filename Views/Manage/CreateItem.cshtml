@@ -35,8 +35,18 @@
 				@Html.DropDownListFor(m => ((Machine)m).DepartmentId, list, new { @class = "form-control" })
 			</div>
 		</div>
-	}
-	<div class="form-group">
+    }
+    if (Model is Product)
+    {
+        <div class="form-group">
+            @Html.LabelFor(m => ((Product)m).Deadline, new { @class = "col-md-2 control-label" })
+            <div class="col-md-10">
+                @Html.TextBoxFor(m => ((Product)m).Deadline, new { @class = "form-control jquery-date-time" })
+                <input type="hidden" class="date-time-lower" value="" />
+            </div>
+        </div>
+    }
+    <div class="form-group">
 		<div class="col-md-offset-2 col-md-10">
 			<input type="submit" class="btn btn-default" value="@string.Format("Зберегти {0}", Model.InheritorNameUrk.ToLower())" />
 		</div>

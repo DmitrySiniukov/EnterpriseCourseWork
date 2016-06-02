@@ -2,9 +2,12 @@
 @using Enterprise.Infrastructure
 @model Schedule<MachineSchedule>
 @{
-    ViewBag.Title = "Розклад робіт";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+	ViewBag.Title = "Розклад робіт";
+	Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>@ViewBag.Title</h2>
-
+<div>
+	<h2>@ViewBag.Title</h2>
+	<div class="gantt-chart" style='width: 100%;'></div>
+	<input id="gantt-chart-data" type="hidden" value="@Model.GetJson()"/>
+</div>

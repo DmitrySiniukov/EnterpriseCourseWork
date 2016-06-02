@@ -23,10 +23,11 @@
 
 					break;
 				case "engineer":
-					@Html.ActionLink("Ведення відділів", "EditDepartments", "Manage", htmlAttributes: new { @class = "btn btn-default", @style = "margin-right: 10px;" }, routeValues: null)
+					@Html.ActionLink("Ведення дільниць", "EditDepartments", "Manage", htmlAttributes: new { @class = "btn btn-default", @style = "margin-right: 10px;" }, routeValues: null)
 					@Html.ActionLink("Ведення приладів", "EditMachines", "Manage", htmlAttributes: new { @class = "btn btn-default", @style = "margin-right: 10px;" }, routeValues: null)
 					break;
 			}
+			@Html.ActionLink("Аналіз розкладу виробництва", "Schedule", "Manage", htmlAttributes: new { @class = "btn btn-success" }, routeValues: null)
 		</div>
 	</div>
 

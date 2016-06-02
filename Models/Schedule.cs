@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Script.Serialization;
 using Enterprise.Infrastructure;
 using Enterprise.Models;
+using Newtonsoft.Json;
 
 namespace Enterprise.Models
 {
@@ -42,6 +44,71 @@ namespace Enterprise.Models
 		}
 
 
+		public string GetJson()
+		{
+			var data = new List<object>();
+			var links = new List<object>();
+			var currentId = 1;
+            var linkId = 10;
+            foreach (var machine in this.OrderBy(x => x.Machine.DepartmentId).ThenBy(x => x.Machine.Id))
+			{
+				if (machine.Tasks.Count != 0)
+				{
+					var parentId = currentId++;
+					var startTime = machine.StartTime;
+					var previousId = 0;
+					var duration = 0d;
+					foreach (var task in machine.Tasks)
+					{
+						data.Add(new
+						{
+							id = currentId,
+							text = task.TaskName,
+							start_date = dateString(startTime),
+							duration = string.Format("{0}", task.Duration/60),
+							parent = parentId.ToString(),
+							progress = 0,
+							open = true
+						});
+						startTime = startTime.AddSeconds(task.Duration);
+
+						if (previousId != 0)
+						{
+							links.Add(new
+							{
+								id = linkId.ToString(),
+								source = previousId.ToString(),
+								target = currentId.ToString(),
+								type = "0"
+							});
+							++linkId;
+						}
+						previousId = currentId;
+						duration += task.Duration;
+						currentId++;
+					}
+
+					data.Add(new
+					{
+						id = parentId,
+						text = string.Format("{0} (дільниця \"{1}\")", machine.Machine.Name, machine.Machine.DepartmentName),
+						start_date = dateString(machine.StartTime),
+						duration = string.Format("{0}", duration / 60),
+						progress = 1,
+						open = true
+					});
+				}
+			}
+			
+			return new JavaScriptSerializer().Serialize(new {data = data, links = links});
+		}
+
+		private static string dateString(DateTime date)
+		{
+			return string.Format("{0:D2}-{1:D2}-{2} {3:D2}:{4:D2}", date.Day, date.Month, date.Year, date.Hour, date.Minute);
+		}
+
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -50,181 +117,232 @@ namespace Enterprise.Models
 		/// <returns></returns>
 		public static Schedule<MachineSchedule> BuildSchedule(IEnumerable<ScheduleTask> tasks, IEnumerable<Machine> machines)
 		{
-			return new Schedule<MachineSchedule>();
-			//#region Validate arguments
+			#region Validate arguments
 
-			//if (tasks == null)
-			//{
-			//	throw new ArgumentNullException();
-			//}
+			if (tasks == null)
+			{
+				throw new ArgumentNullException();
+			}
 
-			//if (machines == null)
-			//{
-			//	throw new ArgumentNullException();
-			//}
+			if (machines == null)
+			{
+				throw new ArgumentNullException();
+			}
 
-			//var tasksList = (tasks as List<Task>) ?? tasks.ToList();
-			//var machinesList = (machines as List<Machine>) ?? machines.ToList();
+			var tasksList = (tasks as List<ScheduleTask>) ?? tasks.ToList();
+			var machinesList = (machines as List<Machine>) ?? machines.ToList();
 
-			//if (tasksList.Count == 0 || machinesList.Count == 0)
-			//{
-			//	return new Schedule<MachineSchedule>(machinesList);
-			//}
+			if (tasksList.Count == 0 || machinesList.Count == 0)
+			{
+				return new Schedule<MachineSchedule>(machinesList);
+			}
 
-			//#endregion
+			#endregion
 
-			//tasksList.Sort((x, y) =>
-			//{
-			//	var result = x.ExtremeTime.CompareTo(y.ExtremeTime);
-			//	return result == 0 ? x.Duration.CompareTo(y.Duration) : result;
-			//});
+			tasksList.Sort((x, y) =>
+			{
+				var result = x.ExtremeTime.CompareTo(y.ExtremeTime);
+				return result == 0 ? x.Duration.CompareTo(y.Duration) : result;
+			});
 
-			//var initSchedule = initialSchedule(tasksList, machinesList);
+			var initSchedule = initialSchedule(tasksList, machinesList);
 
-			//// Initial schedule has been found
-			//if (initSchedule != null)
-			//{
-			//	if (initSchedule.NextTaskIndex == tasksList.Count)
-			//	{
-			//		return initSchedule.Convert();
-			//	}
+			// Initial schedule has been found
+			if (initSchedule != null)
+			{
+				if (initSchedule.AppointedTasks.Count == tasksList.Count)
+				{
+					return initSchedule.Convert();
+				}
 
-			//	// Algorithm A1.1
-			//	var success = true;
-			//	var sortedSet = new SortedSet<InitialMachineSchedule>(initSchedule, new EndTimeComparer());
-			//	for (var i = initSchedule.NextTaskIndex; i < tasksList.Count; ++i)
-			//	{
-			//		var firstMachine = sortedSet.Min;
-			//		var currentTask = tasksList[i];
-			//		var newEndTime = firstMachine.EndTime + currentTask.Duration;
-			//		if (newEndTime > currentTask.Deadline)
-			//		{
-			//			success = false;
-			//			break;
-			//		}
+				// Algorithm A1.1
+				var success = true;
+				var sortedSet = new List<InitialMachineSchedule>(initSchedule);
+				foreach (var currentTask in tasksList)
+				{
+					if (initSchedule.AppointedTasks.Contains(currentTask.TechnologyId))
+					{
+						continue;
+					}
 
-			//		sortedSet.Remove(firstMachine);
-			//		firstMachine.Tasks.AddLast(currentTask);
-			//		firstMachine.EndTime += currentTask.Duration;
-			//		sortedSet.Add(firstMachine);
-			//	}
+					InitialMachineSchedule min = null;
+					foreach (var machine in sortedSet)
+					{
+						if (currentTask.CompatibleDepartments.Contains(machine.Machine.DepartmentId) &&
+                            (min == null || machine.EndTime < min.EndTime))
+						{
+							min = machine;
+						}
+					}
 
-			//	if (success)
-			//	{
-			//		return (new InitialSchedule(sortedSet).Convert());
-			//	}
-			//}
+					if (min == null)
+					{
+						success = false;
+						break;
+					}
 
-			//// Algorithm A2.1
+					if (min.Tasks.Count == 0)
+					{
+						min.StartTime = currentTask.ExtremeTime;
+						min.EndTime = currentTask.Deadline;
+						min.Tasks.AddFirst(currentTask);
+						continue;
+					}
 
-			//// Sorg by (d, l)
-			//tasksList.Sort((x, y) =>
-			//{
-			//	var result = x.Deadline.CompareTo(y.Deadline);
-			//	return result == 0 ? x.Duration.CompareTo(y.Duration) : result;
-			//});
+					var newEndTime = min.EndTime.AddSeconds(currentTask.Duration);
+					if (newEndTime > currentTask.Deadline)
+					{
+						success = false;
+						break;
+					}
+					
+					min.Tasks.AddLast(currentTask);
+					min.EndTime = min.EndTime.AddSeconds(currentTask.Duration);
+				}
 
-			//var machineSchedule = new Schedule<MachineSchedule>(machinesList);
-			//var n = tasksList.Count;
-			//var m = machinesList.Count;
+				if (success)
+				{
+					return (new InitialSchedule(sortedSet).Convert());
+				}
+			}
 
-			//// Building schedule
-			//var scheduleSet = new SortedSet<MachineSchedule>(machineSchedule, new StartTimeComparer());
-			//for (var i = n - 1; i >= 0; --i)
-			//{
-			//	// Find unallowable with minimal start time
-			//	var currentTask = tasksList[i];
-			//	MachineSchedule targetMachine = null;
-			//	foreach (var schedule in scheduleSet)
-			//	{
-			//		if (!(currentTask.Deadline > schedule.StartTime) &&
-			//			(targetMachine == null || schedule.StartTime < targetMachine.StartTime))
-			//		{
-			//			targetMachine = schedule;
-			//		}
-			//	}
+			// Algorithm A2.1
 
-			//	// If founded
-			//	if (targetMachine != null)
-			//	{
-			//		scheduleSet.Remove(targetMachine);
-			//		targetMachine.Tasks.AddFirst(currentTask);
-			//		targetMachine.StartTime = currentTask.ExtremeTime;
-			//		scheduleSet.Add(targetMachine);
-			//		continue;
-			//	}
+			// Sorg by (d, l)
+			tasksList.Sort((x, y) =>
+			{
+				var result = x.Deadline.CompareTo(y.Deadline);
+				return result == 0 ? x.Duration.CompareTo(y.Duration) : result;
+			});
 
-			//	// Else take machine with max start time, find allowable task with max duration
-			//	var lastMachine = scheduleSet.Max;
-			//	var longestTask = currentTask;
-			//	var index = i;
-			//	for (var j = i; j >= 0; --j)
-			//	{
-			//		if (!(tasksList[j].Deadline < lastMachine.StartTime) && tasksList[j].Duration > longestTask.Duration)
-			//		{
-			//			longestTask = tasksList[j];
-			//			index = j;
-			//		}
-			//	}
+			var machineSchedules = new Schedule<MachineSchedule>(machinesList);
+			var n = tasksList.Count;
 
-			//	scheduleSet.Remove(lastMachine);
-			//	lastMachine.Tasks.AddFirst(longestTask);
-			//	lastMachine.StartTime -= longestTask.Duration;
-			//	scheduleSet.Add(lastMachine);
+			// Building schedule
+			for (var i = n - 1; i >= 0; --i)
+			{
+				// Find unallowable with minimal start time
+				var currentTask = tasksList[i];
+				MachineSchedule targetMachine = null;
+			    MachineSchedule lastMachine = null;
+                foreach (var schedule in machineSchedules)
+				{
+				    if (currentTask.CompatibleDepartments.Contains(schedule.Machine.DepartmentId))
+				    {
+				        if (lastMachine == null || lastMachine.StartTime < schedule.StartTime)
+				        {
+				            lastMachine = schedule;
+				        }
 
-			//	// Remove appointed task
-			//	tasksList.RemoveAt(index);
-			//}
+				        if (!(currentTask.Deadline > schedule.StartTime) &&
+				            (targetMachine == null || schedule.StartTime < targetMachine.StartTime))
+				        {
+				            targetMachine = schedule;
+				        }
+				    }
+				}
 
-			//return new Schedule<MachineSchedule>(scheduleSet);
+			    if (lastMachine == null)
+			    {
+                    continue;
+			    }
+
+			    // If founded
+				if (targetMachine != null)
+				{
+					targetMachine.Tasks.AddFirst(currentTask);
+					targetMachine.StartTime = currentTask.ExtremeTime;
+					continue;
+				}
+
+				// Else take machine with max start time, find allowable task with max duration
+				ScheduleTask longestTask = null;
+				var index = i;
+				for (var j = i; j >= 0; --j)
+				{
+					if (tasksList[j].CompatibleDepartments.Contains(lastMachine.Machine.DepartmentId) &&
+						!(tasksList[j].Deadline < lastMachine.StartTime) &&
+						(longestTask == null || tasksList[j].Duration > longestTask.Duration))
+					{
+						longestTask = tasksList[j];
+						index = j;
+					}
+				}
+                
+				lastMachine.Tasks.AddFirst(longestTask);
+				lastMachine.StartTime = lastMachine.StartTime.AddSeconds(-longestTask.Duration);
+
+				// Remove appointed task
+				tasksList.RemoveAt(index);
+			}
+
+			return new Schedule<MachineSchedule>(machineSchedules);
 		}
 
+		/// <summary>
+		/// Initial schedule
+		/// </summary>
+		/// <param name="tasks"></param>
+		/// <param name="machines"></param>
+		/// <returns></returns>
 		private static InitialSchedule initialSchedule(List<ScheduleTask> tasks, List<Machine> machines)
 		{
 			var schedule = new InitialSchedule(machines);
+			
+			var engaged = new List<int>();
+			foreach (var currentTask in tasks)
+			{
+				int? target = null;
+				foreach (var id in engaged)
+				{
+					if (!currentTask.CompatibleDepartments.Contains(schedule[id].Machine.DepartmentId) || schedule[id].EndTime > currentTask.ExtremeTime)
+					{
+						continue;
+					}
 
-			//var i = 0;
-			//var j = 0;
-			//var n = tasks.Count;
-			//var m = machines.Count;
-			//while (i < n && j < m)
-			//{
-			//	var currentTask = tasks[i];
+					if (target != null)
+					{
+						return null;
+					}
 
-			//	int? target = null;
-			//	for (var k = 0; k < j; ++k)
-			//	{
-			//		if (schedule[k].EndTime > currentTask.ExtremeTime)
-			//		{
-			//			continue;
-			//		}
+					target = id;
+				}
 
-			//		if (target != null)
-			//		{
-			//			return null;
-			//		}
+				if (target != null)
+				{
+					var t = (int)target;
+					schedule[t].Tasks.AddLast(currentTask);
+					schedule[t].EndTime = schedule[t].EndTime.AddSeconds(currentTask.Duration);
+					schedule.AppointedTasks.Add(currentTask.TechnologyId);
+					continue;
+				}
 
-			//		target = k;
-			//	}
+				if (engaged.Count == machines.Count)
+				{
+					return schedule;
+				}
 
-			//	++i;
-
-			//	if (target != null)
-			//	{
-			//		var t = (int)target;
-			//		schedule[t].Tasks.AddLast(currentTask);
-			//		schedule[t].EndTime += currentTask.Duration;
-			//		continue;
-			//	}
-
-			//	// engage next processor
-			//	schedule[j].StartTime = currentTask.ExtremeTime;
-			//	schedule[j].Tasks.AddLast(currentTask);
-			//	schedule[j].EndTime = currentTask.Deadline;
-			//	++j;
-			//}
-
-			//schedule.NextTaskIndex = i;
+				// engage next processor
+			    int? index = null;
+			    for (var i = 0; i < schedule.Count; i++)
+			    {
+			        if (!engaged.Contains(i) && currentTask.CompatibleDepartments.Contains(schedule[i].Machine.DepartmentId))
+			        {
+			            index = i;
+			            break;
+			        }
+			    }
+				if (index == null)
+				{
+					continue;
+				}
+			    var forEngage = schedule[(int)index];
+				forEngage.StartTime = currentTask.ExtremeTime;
+				forEngage.Tasks.AddLast(currentTask);
+				forEngage.EndTime = currentTask.Deadline;
+				schedule.AppointedTasks.Add(currentTask.TechnologyId);
+			    engaged.Add((int)index);
+			}
 
 			return schedule;
 		}
@@ -235,15 +353,17 @@ namespace Enterprise.Models
 		/// </summary>
 		private class InitialMachineSchedule : MachineSchedule
 		{
-			public decimal EndTime { get; set; }
+			public DateTime EndTime { get; set; }
 
 
 			public InitialMachineSchedule()
 			{
+				EndTime = DateTime.MinValue;
 			}
 
 			private InitialMachineSchedule(Machine machine) : base(machine)
 			{
+				EndTime = DateTime.MinValue;
 			}
 
 
@@ -261,7 +381,7 @@ namespace Enterprise.Models
 			/// <summary>
 			/// 
 			/// </summary>
-			public int NextTaskIndex { get; set; }
+			public List<int> AppointedTasks { get; set; }
 
 
 			/// <summary>
@@ -270,6 +390,7 @@ namespace Enterprise.Models
 			/// <param name="machines"></param>
 			public InitialSchedule(IEnumerable<Machine> machines) : base(machines)
 			{
+				AppointedTasks = new List<int>();
 			}
 
 			/// <summary>
@@ -278,6 +399,7 @@ namespace Enterprise.Models
 			/// <param name="machineSchedules"></param>
 			public InitialSchedule(IEnumerable<Schedule<T>.InitialMachineSchedule> machineSchedules) : base(machineSchedules)
 			{
+				AppointedTasks = new List<int>();
 			}
 
 

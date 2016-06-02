@@ -13,7 +13,7 @@ namespace Enterprise.Infrastructure
         /// <summary>
         /// Identifier
         /// </summary>
-        public int Id { get; }
+        public int TechnologyId { get; }
 
         /// <summary>
         /// Duration
@@ -21,42 +21,61 @@ namespace Enterprise.Infrastructure
         public double Duration { get; }
 
         /// <summary>
+        /// Product id
+        /// </summary>
+        public int ProductId { get; set; }
+
+        /// <summary>
+        /// Product name
+        /// </summary>
+        public string ProductName { get; set; }
+
+        /// <summary>
         /// Deadline
         /// </summary>
         public DateTime Deadline { get; }
 
         /// <summary>
+        /// Description
+        /// </summary>
+	    public string Description { get; }
+
+	    /// <summary>
         /// Extreme start time
         /// </summary>
         public DateTime ExtremeTime
         {
-            get { return Deadline.AddSeconds(Duration); }
+            get { return Deadline.AddSeconds(-Duration); }
         }
 
         /// <summary>
+        /// Task id
+        /// </summary>
+	    public int TaskId { get; }
+
+	    /// <summary>
         /// Task name
         /// </summary>
-        public string Name { get; }
+        public string TaskName { get; }
 
         /// <summary>
-        /// Description
+        /// Compatible departments
         /// </summary>
-        public string Description { get; }
-
-        /// <summary>
-        /// Compatible machines
-        /// </summary>
-        public List<int> CompatibleMachines { get; }
+        public List<int> CompatibleDepartments { get; }
 
 
-        public ScheduleTask(int id, double duration, DateTime deadline, string name, string description)
+        public ScheduleTask(int technologyId, double duration, int productId, string productName, DateTime deadline, int taskId,
+            string taskName, string description)
         {
-            Id = id;
+	        TechnologyId = technologyId;
             Duration = duration;
+            ProductId = productId;
+            ProductName = productName;
             Deadline = deadline;
-            Name = name;
+	        TaskId = taskId;
+            TaskName = taskName;
             Description = description;
-            CompatibleMachines = new List<int>();
+            CompatibleDepartments = new List<int>();
         }
     }
 }

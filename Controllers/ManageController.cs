@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.WebSockets;
 using Enterprise.Infrastructure;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
@@ -276,16 +277,109 @@ namespace Enterprise.Controllers
 
 		#endregion
 
-	    public ActionResult Schedule()
+		[Authorize(Roles = "Engineer,Technologist")]
+		public ActionResult Schedule()
 	    {
 		    var machines = Repository.GetItems(new Machine());
-
-	        return View();
+		    var scheduleTasks = Repository.GetScheduleTasks();
+		    var schedule = Schedule<MachineSchedule>.BuildSchedule(scheduleTasks, machines.Cast<Machine>());
+			
+			return View(schedule);
 	    }
 
-	    #region Common actions
+		#region Technologies
 
-		private ActionResult editItems(Item instance, string message = null)
+		[Authorize(Roles = "Technologist")]
+		[HttpGet]
+		public ActionResult EditTechnologies(int id, string message = null)
+		{
+			if (!string.IsNullOrEmpty(message))
+			{
+				ViewBag.StatusMessage = message;
+			}
+
+			var list = Repository.GetTechnologies(id);
+			return View(list);
+		}
+
+		[Authorize(Roles = "Technologist")]
+		[HttpPost]
+		public ActionResult EditTechnologies(Technologies list)
+		{
+			if (ModelState.IsValid)
+			{
+			    var error = false;
+			    for (var i = 0; i < list.Count; i++)
+			    {
+			        if (!(list[i].Duration > 0))
+			        {
+                        ModelState.AddModelError(string.Format("[{0}].Duration", i), "Тривалість повинна бути додатньою.");
+			            error = true;
+			        }
+			    }
+			    if (error)
+			    {
+                    return View(list);
+                }
+
+			    Repository.UpdateTechnologies(list);
+				return RedirectToAction("EditProducts", "Manage", new { message = "Технологічну карту успішно збережено" });
+			}
+		    list.ProductName = Request.Form.GetValues(0).First();
+			return View(list);
+		}
+
+		[Authorize(Roles = "Technologist")]
+		[HttpGet]
+		public ActionResult CreateTechnology(int id)
+		{
+			var technology = new Technology {ProductId = id};
+			return View(technology);
+		}
+
+		[Authorize(Roles = "Technologist")]
+		[HttpPost]
+		public ActionResult CreateTechnology(Technology technology)
+		{
+			if (ModelState.IsValid)
+			{
+			    if (!(technology.Duration > 0))
+                {
+                    ModelState.AddModelError("Duration", "Тривалість повинна бути додатньою.");
+                    return View(technology);
+                }
+			    Repository.CreateTechnology(technology);
+				return RedirectToAction("EditTechnologies", "Manage", new { id = technology.ProductId, message = "Операцію успішно додано до технологічної карти." });
+			}
+			return View(technology);
+		}
+
+        #endregion
+        
+        [Authorize(Roles = "Engineer")]
+        public ActionResult Compatibilities(int id)
+        {
+            var department = Repository.GetDepartment(id);
+            if (department == null)
+            {
+                return RedirectToAction("NotFound", "Home");
+            }
+
+            var model = new Compatibilities(Repository.GetCompatibilities(id)) {Department = department};
+
+            return View(model);
+	    }
+
+        [Authorize(Roles = "Engineer")]
+        public ActionResult ChangeCompatibility(int dp, int task, bool value)
+        {
+            Repository.ChangeCompatibility(dp, task, value);
+            return RedirectToAction("Compatibilities", "Manage", new {id = dp});
+        }
+
+        #region Common actions
+
+        private ActionResult editItems(Item instance, string message = null)
 		{
 			ViewBag.StatusMessage = message;
 
@@ -310,9 +404,14 @@ namespace Enterprise.Controllers
 		private ActionResult deleteItem(Item instance, int id)
 		{
 			var message = string.Empty;
-			if (Repository.DeleteItem(id, instance.InheritorName))
+			try
 			{
+				Repository.DeleteItem(id, instance.InheritorName);
 				message = string.Format("{0} було успішно видалено.", instance.InheritorNameUrk);
+			}
+			catch (Exception e)
+			{
+				message = string.Format("Є дані, що писилаються на цей запис. {0} не було видалено.", instance.InheritorNameUrk);
 			}
 			return RedirectToAction(string.Format("Edit{0}s", instance.InheritorName), new { message = message });
 		}
