@@ -10,10 +10,15 @@
 
 @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
 {
-	var roles = Repository.GetAvailableRoles();
-	var listItems = roles.Select(x => new SelectListItem() { Value = x.Id, Text = x.Name });
+    var roles = Repository.GetAvailableRoles();
+    var dict = new Dictionary<string, string>
+    {
+        {"technologist", "Співробітник технологічного відділу"},
+        {"engineer", "Головний інженер"}
+    };
+    var listItems = roles.Select(x => new SelectListItem { Value = x.Id, Text = dict[x.Name.ToLower()] });
 
-	@Html.AntiForgeryToken()
+    @Html.AntiForgeryToken()
 	<h4>Реєстрація</h4>
 	<hr />
 	@Html.ValidationSummary("", new { @class = "text-danger" })
