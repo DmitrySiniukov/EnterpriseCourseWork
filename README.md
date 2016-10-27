@@ -1,2 +1,2 @@
-The course work for Software Engineering.
-The program's main purpose is to schedule works of an enterprise.
+#The Software Engineering coursework.
+The project's main purpose is to build schedules for tasks and machines of an enterprise.
